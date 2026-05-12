@@ -1,6 +1,9 @@
 FROM php:8.2-cli
 
-# Install system dependencies
+# Allow composer root
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -26,15 +29,15 @@ RUN composer install --no-dev --optimize-autoloader
 # Install Node dependencies
 RUN npm install
 
-# Build Vite
+# Build frontend
 RUN npm run build
 
 # Laravel optimize
 RUN php artisan config:clear
 RUN php artisan cache:clear
 
-# Expose Railway port
+# Railway port
 EXPOSE 8080
 
-# Start Laravel
+# Start app
 CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8080
