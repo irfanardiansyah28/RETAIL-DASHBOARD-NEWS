@@ -32,10 +32,6 @@ RUN npm install
 # Build frontend
 RUN npm run build
 
-# Laravel optimize
-RUN php artisan config:clear
-RUN php artisan cache:clear
-
 # Railway port
 EXPOSE 8080
 
