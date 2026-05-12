@@ -1,4 +1,4 @@
-FROM php:8.2-cli
+FROM php:8.4-cli
 
 # Allow composer root
 ENV COMPOSER_ALLOW_SUPERUSER=1
