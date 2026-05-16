@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\ActivityLog;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Models\OrderStatusTimeline;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
@@ -88,6 +92,7 @@ class OrderController extends Controller
             )
         );
     }
+    
 
     // CREATE PAGE
 
@@ -123,6 +128,126 @@ class OrderController extends Controller
         );
     }
 
+
+    /*
+|--------------------------------------------------------------------------
+| EXPORT CSV
+|--------------------------------------------------------------------------
+*/
+
+public function exportCsv()
+{
+
+    $fileName = 'orders.csv';
+
+    $orders = DB::table('sales.orders as o')
+
+        ->join(
+            'sales.customers as c',
+            'o.customer_id',
+            '=',
+            'c.customer_id'
+        )
+
+        ->leftJoin(
+            'sales.order_items as oi',
+            'o.order_id',
+            '=',
+            'oi.order_id'
+        )
+
+        ->select(
+
+            'o.order_id',
+            'o.order_date',
+            'o.status',
+
+            DB::raw("
+                CONCAT(
+                    c.first_name,
+                    ' ',
+                    c.last_name
+                ) as customer_name
+            "),
+
+            DB::raw("
+                IFNULL(
+                    SUM(
+                        oi.quantity *
+                        oi.list_price
+                    ),
+                    0
+                ) as total_amount
+            ")
+
+        )
+
+        ->groupBy(
+            'o.order_id',
+            'o.order_date',
+            'o.status',
+            'c.first_name',
+            'c.last_name'
+        )
+
+        ->orderByDesc('o.order_id')
+
+        ->get();
+
+    $headers = [
+
+        "Content-type" => "text/csv",
+        "Content-Disposition" =>
+            "attachment; filename=$fileName",
+
+        "Pragma" => "no-cache",
+        "Cache-Control" => "must-revalidate",
+        "Expires" => "0"
+
+    ];
+
+    $columns = [
+
+        'Order ID',
+        'Date',
+        'Customer',
+        'Total',
+        'Status'
+
+    ];
+
+    $callback = function() use (
+        $orders,
+        $columns
+    ) {
+
+        $file = fopen('php://output', 'w');
+
+        fputcsv($file, $columns);
+
+        foreach ($orders as $order) {
+
+            fputcsv($file, [
+
+                $order->order_id,
+                $order->order_date,
+                $order->customer_name,
+                $order->total_amount,
+                $order->status
+
+            ]);
+        }
+
+        fclose($file);
+    };
+
+    return response()->stream(
+        $callback,
+        200,
+        $headers
+    );
+}
+
     // STORE ORDER
 
     public function store(Request $request)
@@ -132,7 +257,11 @@ class OrderController extends Controller
 
         try {
 
-            // CREATE NEW CUSTOMER IF FILLED
+            /*
+            |--------------------------------------------------------------------------
+            | CREATE NEW CUSTOMER
+            |--------------------------------------------------------------------------
+            */
 
             if ($request->new_customer_name) {
 
@@ -167,7 +296,11 @@ class OrderController extends Controller
                 $customerId = $request->customer_id;
             }
 
-            // INSERT ORDER
+            /*
+            |--------------------------------------------------------------------------
+            | INSERT ORDER
+            |--------------------------------------------------------------------------
+            */
 
             $orderId = DB::table('sales.orders')
 
@@ -191,52 +324,95 @@ class OrderController extends Controller
 
                 ]);
 
-            // GET PRODUCT PRICE
+            /*
+            |--------------------------------------------------------------------------
+            | INSERT MULTIPLE ORDER ITEMS
+            |--------------------------------------------------------------------------
+            */
 
-            $product = DB::table('production.products')
+            foreach ($request->products as $index => $productId) {
 
-                ->where(
-                    'product_id',
-                    $request->product_id
-                )
+                // GET PRODUCT
 
-                ->first();
+                $product = DB::table('production.products')
 
-            // INSERT ORDER ITEM
+                    ->where(
+                        'product_id',
+                        $productId
+                    )
 
-            DB::table('sales.order_items')
+                    ->first();
 
-                ->insert([
+                // GET QTY
 
-                    'order_id' => $orderId,
+                $qty = $request->quantities[$index];
 
-                    'product_id' => $request->product_id,
+                // INSERT ORDER ITEM
 
-                    'quantity' => $request->quantity,
+                DB::table('sales.order_items')
 
-                    'list_price' => $product->list_price,
+                    ->insert([
 
-                    'discount' => 0
+                        'order_id' => $orderId,
 
-                ]);
+                        'product_id' => $productId,
 
-            // REDUCE STOCK
+                        'quantity' => $qty,
 
-            DB::table('production.stocks')
+                        'list_price' => $product->list_price,
 
-                ->where(
-                    'product_id',
-                    $request->product_id
-                )
+                        'discount' => 0
 
-                ->decrement(
-                    'quantity',
-                    $request->quantity
-                );
+                    ]);
+
+                // REDUCE STOCK
+
+                DB::table('production.stocks')
+
+                    ->where(
+                        'product_id',
+                        $productId
+                    )
+
+                    ->decrement(
+                        'quantity',
+                        $qty
+                    );
+            }
 
             DB::commit();
 
-            return redirect('/orders');
+            OrderStatusTimeline::create([
+                'order_id' => $orderId,
+                'status' => 'Pending',
+                'title' => 'Order Created',
+                'description' => 'Order has been created and is waiting for payment.',
+                'user_id' => Auth::id(),
+                'user_name' => Auth::check()
+                    ? Auth::user()->name
+                    : 'System',
+            ]);
+            
+            logActivity(
+                'Create Order',
+                'Order',
+                'Created Order #'.$orderId
+            );
+
+ActivityLog::create([
+
+    'user_name' => auth()->user()->name,
+
+    'activity' => 'Created Order #'.$orderId
+
+]);
+
+return redirect('/orders')
+
+    ->with(
+        'success',
+        'Order created successfully'
+    );
 
         } catch (\Exception $e) {
 
@@ -261,18 +437,19 @@ class OrderController extends Controller
             )
 
             ->selectRaw('
-                o.order_id,
-                o.order_date,
+    o.order_id,
+    o.order_date,
+    o.status,
 
-                CONCAT(
-                    c.first_name,
-                    " ",
-                    c.last_name
-                ) as customer_name,
+    CONCAT(
+        c.first_name,
+        " ",
+        c.last_name
+    ) as customer_name,
 
-                c.email,
-                c.phone
-            ')
+    c.email,
+    c.phone
+')
 
             ->where(
                 'o.order_id',
@@ -313,11 +490,16 @@ class OrderController extends Controller
 
         $grandTotal = $items->sum('subtotal');
 
+        $timelines = OrderStatusTimeline::where('order_id', $id)
+    ->orderBy('created_at')
+    ->get();
+
         return view(
             'orders.show',
             compact(
                 'order',
                 'items',
+                'timelines',
                 'grandTotal'
             )
         );

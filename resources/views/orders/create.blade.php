@@ -130,61 +130,148 @@
 
         <hr>
 
-        <!-- PRODUCT -->
+        <!-- ORDER ITEMS -->
 
-        <div class="mb-3">
+        <h5 class="mb-3">
 
-            <label class="form-label">
+            Order Items
 
-                Product
+        </h5>
 
-            </label>
+        <div id="items-wrapper">
 
-            <select
-                name="product_id"
-                class="form-control"
-                required
-            >
+            <div class="row mb-3 item-row">
 
-                @foreach($products as $product)
+                <!-- PRODUCT -->
 
-                    <option
-                        value="{{ $product->product_id }}"
+                <div class="col-md-6">
+
+                    <label class="form-label">
+
+                        Product
+
+                    </label>
+
+                    <select
+                        name="products[]"
+                        class="form-control product-select"
+                        required
                     >
 
-                        {{ $product->product_name }}
+                        <option value="">
 
-                        -
+                            -- Select Product --
 
-                        Rp {{ number_format($product->list_price,0,',','.') }}
+                        </option>
 
-                    </option>
+                        @foreach($products as $product)
 
-                @endforeach
+                            <option
+                                value="{{ $product->product_id }}"
+                                data-price="{{ $product->list_price }}"
+                            >
 
-            </select>
+                                {{ $product->product_name }}
+
+                                -
+
+                                Rp {{ number_format($product->list_price,0,',','.') }}
+
+                            </option>
+
+                        @endforeach
+
+                    </select>
+
+                </div>
+
+                <!-- QTY -->
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+
+                        Qty
+
+                    </label>
+
+                    <input
+                        type="number"
+                        name="quantities[]"
+                        class="form-control quantity-input"
+                        value="1"
+                        min="1"
+                        required
+                    >
+
+                </div>
+
+                <!-- PRICE -->
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+
+                        Price
+
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control price-display"
+                        readonly
+                    >
+
+                </div>
+
+                <!-- SUBTOTAL -->
+
+                <div class="col-md-2">
+
+                    <label class="form-label">
+
+                        Subtotal
+
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control subtotal-display"
+                        readonly
+                    >
+
+                </div>
+
+            </div>
 
         </div>
 
-        <!-- QUANTITY -->
+        <!-- ADD PRODUCT BUTTON -->
 
-        <div class="mb-3">
+        <button
+            type="button"
+            class="btn btn-success mb-3"
+            id="add-item"
+        >
 
-            <label class="form-label">
+            + Add Product
 
-                Quantity
+        </button>
 
-            </label>
+        <!-- GRAND TOTAL -->
 
-            <input
-                type="number"
-                name="quantity"
-                class="form-control"
-                required
-                min="1"
-            >
+        <div class="mb-4">
+
+            <h4>
+
+                Grand Total:
+                Rp <span id="grand-total">0</span>
+
+            </h4>
 
         </div>
+
+        <!-- SUBMIT -->
 
         <button class="btn btn-primary">
 
@@ -195,5 +282,100 @@
     </form>
 
 </div>
+
+<script>
+
+    function calculateTotals() {
+
+        let grandTotal = 0;
+
+        document.querySelectorAll('.item-row').forEach(row => {
+
+            const product =
+                row.querySelector('.product-select');
+
+            const qty =
+                row.querySelector('.quantity-input');
+
+            const priceDisplay =
+                row.querySelector('.price-display');
+
+            const subtotalDisplay =
+                row.querySelector('.subtotal-display');
+
+            const selectedOption =
+                product.options[product.selectedIndex];
+
+            const price =
+                selectedOption.dataset.price || 0;
+
+            const subtotal =
+                price * qty.value;
+
+            priceDisplay.value =
+                Number(price).toLocaleString();
+
+            subtotalDisplay.value =
+                Number(subtotal).toLocaleString();
+
+            grandTotal += subtotal;
+
+        });
+
+        document.getElementById(
+            'grand-total'
+        ).innerText =
+            grandTotal.toLocaleString();
+    }
+
+    document.addEventListener('change', function(e){
+
+        if (
+            e.target.classList.contains('product-select') ||
+            e.target.classList.contains('quantity-input')
+        ) {
+
+            calculateTotals();
+
+        }
+
+    });
+
+    document.getElementById('add-item')
+
+        .addEventListener('click', function(){
+
+            const wrapper =
+                document.getElementById('items-wrapper');
+
+            const firstRow =
+                document.querySelector('.item-row');
+
+            const clone =
+                firstRow.cloneNode(true);
+
+            clone.querySelectorAll('input').forEach(input => {
+
+                if (
+                    input.classList.contains('quantity-input')
+                ) {
+
+                    input.value = 1;
+
+                } else {
+
+                    input.value = '';
+
+                }
+
+            });
+
+            clone.querySelector('.product-select').selectedIndex = 0;
+
+            wrapper.appendChild(clone);
+
+        });
+
+</script>
 
 @endsection
