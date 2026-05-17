@@ -26,78 +26,243 @@
 
     <style>
 
-        body {
-            min-height: 100vh;
-            background:
-                linear-gradient(
-                    135deg,
-                    #0f172a,
-                    #1e293b,
-                    #2563eb
-                );
-            font-family: Inter, Arial, sans-serif;
+        * {
+            box-sizing: border-box;
         }
 
-        .login-wrapper {
+        body {
             min-height: 100vh;
+            margin: 0;
+            font-family: Inter, Arial, sans-serif;
+            background: #f3f4f6;
+            overflow-x: hidden;
+        }
+
+        .login-page {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+        }
+
+        .login-brand-panel {
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.35), transparent 32%),
+                linear-gradient(180deg, #0f172a, #1e293b);
+            color: white;
+            padding: 54px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-brand-panel::after {
+            content: "";
+            position: absolute;
+            width: 420px;
+            height: 420px;
+            right: -160px;
+            bottom: -160px;
+            background: rgba(37, 99, 235, 0.22);
+            border-radius: 999px;
+            filter: blur(4px);
+        }
+
+        .brand-logo {
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 24px;
+            box-shadow: 0 12px 30px rgba(37, 99, 235, 0.35);
+        }
+
+        .hero-title {
+            font-size: 48px;
+            line-height: 1.08;
+            font-weight: 900;
+            margin-bottom: 18px;
+            max-width: 620px;
+        }
+
+        .hero-subtitle {
+            color: #cbd5e1;
+            font-size: 17px;
+            max-width: 560px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 32px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 18px;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-card i {
+            color: #60a5fa;
+            font-size: 22px;
+        }
+
+        .feature-card .label {
+            margin-top: 10px;
+            font-weight: 800;
+        }
+
+        .feature-card .desc {
+            color: #cbd5e1;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .login-form-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 42px;
+            background:
+                radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 28%),
+                #f3f4f6;
         }
 
         .login-card {
             width: 100%;
-            max-width: 460px;
+            max-width: 500px;
             border: none;
             border-radius: 28px;
+            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
             overflow: hidden;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.25);
         }
 
-        .login-header {
-            background:
-                linear-gradient(
-                    135deg,
-                    #2563eb,
-                    #1d4ed8
-                );
-            color: white;
-            padding: 34px;
-            text-align: center;
+        .login-card-header {
+            background: white;
+            padding: 34px 36px 10px;
         }
 
-        .login-header h1 {
-            font-weight: 800;
+        .login-card-header h2 {
+            font-size: 32px;
+            font-weight: 900;
             margin-bottom: 6px;
         }
 
-        .login-body {
-            padding: 36px;
+        .login-card-header p {
+            color: #6b7280;
+            margin-bottom: 0;
+        }
+
+        .login-card-body {
             background: white;
+            padding: 30px 36px 36px;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .input-group-text {
+            border-radius: 16px 0 0 16px;
+            background: #f9fafb;
+            border-right: none;
         }
 
         .form-control {
-            border-radius: 14px;
-            padding: 12px 14px;
+            border-radius: 16px;
+            padding: 13px 14px;
+            border: 1px solid #d1d5db;
         }
 
-        .btn {
-            border-radius: 14px;
-            padding: 12px;
-            font-weight: 700;
+        .input-group .form-control {
+            border-left: none;
+            border-radius: 0 16px 16px 0;
         }
 
-        .brand-icon {
-            width: 58px;
-            height: 58px;
+        .form-control:focus {
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+            border-color: #2563eb;
+        }
+
+        .btn-login {
+            border-radius: 16px;
+            padding: 13px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: none;
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.25);
+        }
+
+        .mini-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .mini-card {
+            background: #f9fafb;
             border-radius: 18px;
-            background: rgba(255,255,255,0.18);
+            padding: 14px;
+            text-align: center;
+        }
+
+        .mini-card .value {
+            font-size: 21px;
+            font-weight: 900;
+            color: #111827;
+        }
+
+        .mini-card .text {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .secure-note {
+            color: #6b7280;
+            font-size: 13px;
+            margin-top: 22px;
             display: flex;
+            gap: 8px;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 14px;
-            font-size: 26px;
+        }
+
+        @media(max-width: 992px) {
+            .login-page {
+                grid-template-columns: 1fr;
+            }
+
+            .login-brand-panel {
+                padding: 34px;
+            }
+
+            .hero-title {
+                font-size: 36px;
+            }
+
+            .login-form-panel {
+                padding: 24px;
+            }
         }
 
     </style>
@@ -106,137 +271,251 @@
 
 <body>
 
-<div class="login-wrapper">
+<div class="login-page">
 
-    <div class="card login-card">
+    <div class="login-brand-panel">
 
-        <div class="login-header">
+        <div class="brand-logo">
 
-            <div class="brand-icon">
-                <i class="bi bi-shop"></i>
+            <div class="brand-logo-icon">
+                <i class="bi bi-grid-fill"></i>
             </div>
 
-            <h1>
-                RetailOps
-            </h1>
-
-            <p class="mb-0">
-                Retail Fraud & Analytics Platform
-            </p>
+            RetailOps
 
         </div>
 
-        <div class="login-body">
+        <div style="position: relative; z-index: 2;">
 
-            @if(session('status'))
+            <div class="hero-title">
+                Retail intelligence for smarter operations.
+            </div>
 
-                <div class="alert alert-success">
-                    {{ session('status') }}
+            <p class="hero-subtitle">
+                Monitor sales, inventory, customer risk, fraud patterns, investigation cases, and executive insights from one dashboard.
+            </p>
+
+            <div class="feature-grid">
+
+                <div class="feature-card">
+                    <i class="bi bi-shield-check"></i>
+                    <div class="label">Fraud Control</div>
+                    <div class="desc">Risk flags, scenario rules, and investigation workflow.</div>
                 </div>
 
-            @endif
-
-            <form
-                method="POST"
-                action="{{ route('login') }}"
-            >
-
-                @csrf
-
-                <div class="mb-3">
-
-                    <label class="form-label fw-semibold">
-                        Email
-                    </label>
-
-                    <input
-                        type="email"
-                        name="email"
-                        class="form-control"
-                        value="{{ old('email') }}"
-                        required
-                        autofocus
-                        autocomplete="username"
-                        placeholder="Enter your email"
-                    >
-
-                    @error('email')
-
-                        <div class="text-danger small mt-2">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
-
+                <div class="feature-card">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <div class="label">Analytics</div>
+                    <div class="desc">Revenue, store ranking, rule analytics, and trends.</div>
                 </div>
 
-                <div class="mb-3">
-
-                    <label class="form-label fw-semibold">
-                        Password
-                    </label>
-
-                    <input
-                        type="password"
-                        name="password"
-                        class="form-control"
-                        required
-                        autocomplete="current-password"
-                        placeholder="Enter your password"
-                    >
-
-                    @error('password')
-
-                        <div class="text-danger small mt-2">
-                            {{ $message }}
-                        </div>
-
-                    @enderror
-
+                <div class="feature-card">
+                    <i class="bi bi-box-seam"></i>
+                    <div class="label">Inventory</div>
+                    <div class="desc">Low stock alerts and inventory forecast prediction.</div>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="feature-card">
+                    <i class="bi bi-robot"></i>
+                    <div class="label">Local Copilot</div>
+                    <div class="desc">Ask about risk, stock, revenue, store, and customers.</div>
+                </div>
 
-                    <div class="form-check">
+            </div>
 
-                        <input
-                            class="form-check-input"
-                            type="checkbox"
-                            name="remember"
-                            id="remember"
-                        >
+        </div>
 
-                        <label
-                            class="form-check-label"
-                            for="remember"
-                        >
-                            Remember me
+        <div style="position: relative; z-index: 2; color:#94a3b8; font-size:13px;">
+            © {{ date('Y') }} RetailOps Management Platform
+        </div>
+
+    </div>
+
+    <div class="login-form-panel">
+
+        <div class="card login-card">
+
+            <div class="login-card-header">
+
+                <span class="badge bg-dark mb-3">
+                    Secure Access
+                </span>
+
+                <h2>
+                    Welcome Back
+                </h2>
+
+                <p>
+                    Sign in to continue to your RetailOps dashboard.
+                </p>
+
+            </div>
+
+            <div class="login-card-body">
+
+                @if(session('status'))
+
+                    <div class="alert alert-success">
+                        {{ session('status') }}
+                    </div>
+
+                @endif
+
+                <form
+                    method="POST"
+                    action="{{ route('login') }}"
+                >
+
+                    @csrf
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Email Address
                         </label>
+
+                        <div class="input-group">
+
+                            <span class="input-group-text">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+
+                            <input
+                                type="email"
+                                name="email"
+                                class="form-control"
+                                value="{{ old('email') }}"
+                                required
+                                autofocus
+                                autocomplete="username"
+                                placeholder="admin@example.com"
+                            >
+
+                        </div>
+
+                        @error('email')
+
+                            <div class="text-danger small mt-2">
+                                {{ $message }}
+                            </div>
+
+                        @enderror
 
                     </div>
 
-                    @if(Route::has('password.request'))
+                    <div class="mb-3">
 
-                        <a
-                            href="{{ route('password.request') }}"
-                            class="small text-decoration-none"
-                        >
-                            Forgot Password?
-                        </a>
+                        <label class="form-label">
+                            Password
+                        </label>
 
-                    @endif
+                        <div class="input-group">
+
+                            <span class="input-group-text">
+                                <i class="bi bi-lock"></i>
+                            </span>
+
+                            <input
+                                type="password"
+                                name="password"
+                                class="form-control"
+                                required
+                                autocomplete="current-password"
+                                placeholder="Enter password"
+                            >
+
+                        </div>
+
+                        @error('password')
+
+                            <div class="text-danger small mt-2">
+                                {{ $message }}
+                            </div>
+
+                        @enderror
+
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+
+                        <div class="form-check">
+
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                name="remember"
+                                id="remember"
+                            >
+
+                            <label
+                                class="form-check-label"
+                                for="remember"
+                            >
+                                Remember me
+                            </label>
+
+                        </div>
+
+                        @if(Route::has('password.request'))
+
+                            <a
+                                href="{{ route('password.request') }}"
+                                class="small text-decoration-none fw-semibold"
+                            >
+                                Forgot Password?
+                            </a>
+
+                        @endif
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary btn-login w-100"
+                    >
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Login to Dashboard
+                    </button>
+
+                </form>
+
+                <div class="mini-summary">
+
+                    <div class="mini-card">
+                        <div class="value">
+                            KPI
+                        </div>
+                        <div class="text">
+                            Dashboard
+                        </div>
+                    </div>
+
+                    <div class="mini-card">
+                        <div class="value">
+                            Risk
+                        </div>
+                        <div class="text">
+                            Engine
+                        </div>
+                    </div>
+
+                    <div class="mini-card">
+                        <div class="value">
+                            AI
+                        </div>
+                        <div class="text">
+                            Copilot
+                        </div>
+                    </div>
 
                 </div>
 
-                <button
-                    type="submit"
-                    class="btn btn-primary w-100"
-                >
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    Login
-                </button>
+                <div class="secure-note">
+                    <i class="bi bi-lock-fill"></i>
+                    Protected admin and staff access
+                </div>
 
-            </form>
+            </div>
 
         </div>
 
